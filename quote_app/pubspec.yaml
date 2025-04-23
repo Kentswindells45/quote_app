@@ -1,0 +1,12 @@
+name: quote_app
+description: A Flutter app that displays quotes fetched from an API.
+publish_to: 'none'
+version: 1.0.0+1
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.3
+flutter:
+  uses-material-design: true
