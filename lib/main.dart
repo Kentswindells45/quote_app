@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Quote App',
+      debugShowCheckedModeBanner: false, // Disable the debug banner
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const QuoteScreen(),
     );
