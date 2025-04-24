@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.quote_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = 27
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

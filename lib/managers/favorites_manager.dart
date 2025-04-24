@@ -8,8 +8,13 @@ class FavoritesManager {
   static Future<void> addFavorite(String quote, String author) async {
     final prefs = await SharedPreferences.getInstance();
     final favorites = await getFavorites();
-    favorites.add({'quote': quote, 'author': author});
-    await prefs.setString(_favoritesKey, json.encode(favorites));
+
+    // Check if the quote already exists
+    final isDuplicate = favorites.any((item) => item['quote'] == quote);
+    if (!isDuplicate) {
+      favorites.add({'quote': quote, 'author': author});
+      await prefs.setString(_favoritesKey, json.encode(favorites));
+    }
   }
 
   // Retrieve all favorite quotes

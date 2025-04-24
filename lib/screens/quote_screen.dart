@@ -100,6 +100,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
     } catch (e) {
       // Show an error message
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
     }
@@ -107,6 +108,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
 
   void shareQuote() {
     final text = '$_quote\n- $_author';
+    // ignore: deprecated_member_use
     Share.share(text);
   }
 
@@ -194,43 +196,209 @@ class _QuoteScreenState extends State<QuoteScreen> {
                       ],
                     ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: fetchQuote,
-                    child: const Text('Fetch Quote'),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: saveQuoteAsImage,
-                    icon: const Icon(Icons.save),
-                    label: const Text('Save as Image'),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      if (_quote != "Click the button to fetch a quote!") {
-                        await FavoritesManager.addFavorite(_quote, _author);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Quote added to favorites!'),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.favorite),
-                    label: const Text('Add to Favorites'),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FavoritesScreen(),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment:
+                        CrossAxisAlignment
+                            .stretch, // Stretch buttons to fill width
+                    children: [
+                      // Fetch Quote Button
+                      Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.list),
-                    label: const Text('View Favorites'),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: fetchQuote,
+                          onHover: (isHovering) {
+                            setState(() {
+                              _currentBackgroundColor =
+                                  isHovering
+                                      ? Colors.blue.shade700
+                                      : Colors.blue;
+                            });
+                          },
+                          splashColor: Colors.purple.withOpacity(
+                            0.3,
+                          ), // Ripple effect
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.blue, Colors.purple],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Fetch Quote',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10), // Add spacing between buttons
+                      // Save as Image Button
+                      Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: saveQuoteAsImage,
+                          splashColor: Colors.teal.withOpacity(
+                            0.3,
+                          ), // Ripple effect
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.green, Colors.teal],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.save, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Save as Image',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10), // Add spacing between buttons
+                      // Add to Favorites Button
+                      Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () async {
+                            if (_quote !=
+                                "Click the button to fetch a quote!") {
+                              await FavoritesManager.addFavorite(
+                                _quote,
+                                _author,
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Quote added to favorites!'),
+                                ),
+                              );
+                            }
+                          },
+                          splashColor: Colors.orange.withOpacity(
+                            0.3,
+                          ), // Ripple effect
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.red, Colors.orange],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.favorite, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Add to Favorites',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10), // Add spacing between buttons
+                      // View Favorites Button
+                      Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const FavoritesScreen(),
+                              ),
+                            );
+                          },
+                          splashColor: Colors.cyan.withOpacity(
+                            0.3,
+                          ), // Ripple effect
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.indigo, Colors.cyan],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.list, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'View Favorites',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
