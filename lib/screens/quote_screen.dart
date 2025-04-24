@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:share_plus/share_plus.dart'; // For sharing quotes
 import 'package:screenshot/screenshot.dart'; // For capturing screenshots
 import 'package:path_provider/path_provider.dart'; // For accessing device storage
+import 'package:quote_app/managers/favorites_manager.dart';
+import 'package:quote_app/screens/favorites_screen.dart';
 
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key});
@@ -201,6 +203,34 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     onPressed: saveQuoteAsImage,
                     icon: const Icon(Icons.save),
                     label: const Text('Save as Image'),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      if (_quote != "Click the button to fetch a quote!") {
+                        await FavoritesManager.addFavorite(_quote, _author);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Quote added to favorites!'),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.favorite),
+                    label: const Text('Add to Favorites'),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FavoritesScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.list),
+                    label: const Text('View Favorites'),
                   ),
                 ],
               ),
