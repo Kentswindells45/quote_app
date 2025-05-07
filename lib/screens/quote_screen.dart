@@ -2,13 +2,17 @@ import 'dart:io'; // For file operations
 import 'dart:math'; // For generating random numbers
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:quote_app/screens/cached_quotes_screen.dart';
 import 'dart:convert';
 import 'package:share_plus/share_plus.dart'; // For sharing quotes
 import 'package:screenshot/screenshot.dart'; // For capturing screenshots
 import 'package:path_provider/path_provider.dart'; // For accessing device storage
 import 'package:quote_app/managers/favorites_manager.dart';
 import 'package:quote_app/screens/favorites_screen.dart';
-import 'package:quote_app/screens/about_screen.dart'; // Import AboutScreen
+// Import AboutScreen
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:quote_app/screens/about_screen.dart';
 
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key});
@@ -51,7 +55,34 @@ class _QuoteScreenState extends State<QuoteScreen> {
   // Screenshot controller
   final ScreenshotController _screenshotController = ScreenshotController();
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Load cached quotes
+    final box = Hive.box('quotes');
+    final cachedQuotes = box.get('cachedQuotes', defaultValue: []);
+    if (cachedQuotes.isNotEmpty) {
+      setState(() {
+        _quote = cachedQuotes.last['quote'];
+        _author = cachedQuotes.last['author'];
+      });
+    }
+  }
+
   Future<void> fetchQuote() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      // No internet connection
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No internet connection. Showing cached quotes.'),
+        ),
+      );
+      return;
+    }
+
+    // Fetch quote from API
     final url = 'https://zenquotes.io/api/random?category=$_selectedCategory';
     setState(() {
       _isLoading = true;
@@ -68,6 +99,15 @@ class _QuoteScreenState extends State<QuoteScreen> {
             _currentBackgroundColor =
                 _backgroundColors[Random().nextInt(_backgroundColors.length)];
           });
+
+          // Save the quote to Hive
+          final box = Hive.box('quotes');
+          List<dynamic> cachedQuotes = box.get(
+            'cachedQuotes',
+            defaultValue: [],
+          );
+          cachedQuotes.add({'quote': _quote, 'author': _author});
+          box.put('cachedQuotes', cachedQuotes);
         } else {
           setState(() {
             _quote = "Unexpected response format.";
@@ -461,6 +501,56 @@ class _QuoteScreenState extends State<QuoteScreen> {
                                   SizedBox(width: 8),
                                   Text(
                                     'View Favorites',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10), // Add spacing between buttons
+                      // View Cached Quotes Button
+                      Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const CachedQuotesScreen(),
+                              ),
+                            );
+                          },
+                          splashColor: Colors.amber.withOpacity(0.3),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Colors.amber, Colors.orange],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.history, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'View offline Quotes',
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
