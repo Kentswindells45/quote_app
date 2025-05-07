@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:io'; // For file operations
 import 'dart:math'; // For generating random numbers
 import 'package:flutter/material.dart';
@@ -154,7 +156,6 @@ class _QuoteScreenState extends State<QuoteScreen> {
     } catch (e) {
       // Show an error message
       ScaffoldMessenger.of(
-        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
     }
@@ -162,8 +163,30 @@ class _QuoteScreenState extends State<QuoteScreen> {
 
   void shareQuote() {
     final text = '$_quote\n- $_author';
-    // ignore: deprecated_member_use
     Share.share(text);
+  }
+
+  Future<void> shareQuoteAsImage() async {
+    try {
+      // Capture the widget as an image
+      final image = await _screenshotController.capture();
+      if (image == null) return;
+
+      // Save the image to a temporary directory
+      final directory = await getTemporaryDirectory();
+      final imagePath = '${directory.path}/quote_image.png';
+      final file = File(imagePath);
+      await file.writeAsBytes(image);
+
+      // Share the image
+      await Share.shareXFiles([
+        XFile(imagePath),
+      ], text: 'Check out this quote!');
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to share quote: $e')));
+    }
   }
 
   @override

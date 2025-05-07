@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:quote_app/screens/quote_screen.dart';
 import 'package:quote_app/screens/splash_screen.dart';
 
 void main() async {
