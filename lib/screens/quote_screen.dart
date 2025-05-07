@@ -8,6 +8,7 @@ import 'package:screenshot/screenshot.dart'; // For capturing screenshots
 import 'package:path_provider/path_provider.dart'; // For accessing device storage
 import 'package:quote_app/managers/favorites_manager.dart';
 import 'package:quote_app/screens/favorites_screen.dart';
+import 'package:quote_app/screens/about_screen.dart'; // Import AboutScreen
 
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key});
@@ -20,6 +21,19 @@ class _QuoteScreenState extends State<QuoteScreen> {
   String _quote = "Click the button to fetch a quote!";
   String _author = "";
   bool _isLoading = false;
+
+  // List of categories
+  final List<String> _categories = [
+    "Inspiration",
+    "Love",
+    "Life",
+    "Motivation",
+    "Happiness",
+    "Wisdom",
+  ];
+
+  // Selected category
+  String _selectedCategory = "Inspiration";
 
   // List of background colors
   final List<Color> _backgroundColors = [
@@ -38,7 +52,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
 
   Future<void> fetchQuote() async {
-    const url = 'https://zenquotes.io/api/random';
+    final url = 'https://zenquotes.io/api/random?category=$_selectedCategory';
     setState(() {
       _isLoading = true;
     });
@@ -143,6 +157,15 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     ? shareQuote
                     : null,
           ),
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutScreen()),
+              );
+            },
+          ),
         ],
       ),
       body: AnimatedContainer(
@@ -202,6 +225,68 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         CrossAxisAlignment
                             .stretch, // Stretch buttons to fill width
                     children: [
+                      // Category Dropdown
+                      Column(
+                        children: [
+                          const Text(
+                            "Select a Category:",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(
+                                0.1,
+                              ), // Semi-transparent background
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: DropdownButton<String>(
+                              value: _selectedCategory,
+                              dropdownColor: Colors.blue.shade700,
+                              icon: const Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.white,
+                              ),
+                              underline:
+                                  const SizedBox(), // Remove default underline
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                              isExpanded:
+                                  true, // Make the dropdown take full width
+                              items:
+                                  _categories.map((String category) {
+                                    return DropdownMenuItem<String>(
+                                      value: category,
+                                      child: Text(
+                                        category,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedCategory = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                       // Fetch Quote Button
                       Card(
                         elevation: 6,
@@ -211,17 +296,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: fetchQuote,
-                          onHover: (isHovering) {
-                            setState(() {
-                              _currentBackgroundColor =
-                                  isHovering
-                                      ? Colors.blue.shade700
-                                      : Colors.blue;
-                            });
-                          },
-                          splashColor: Colors.purple.withOpacity(
-                            0.3,
-                          ), // Ripple effect
+                          splashColor: Colors.purple.withOpacity(0.3),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 16),
