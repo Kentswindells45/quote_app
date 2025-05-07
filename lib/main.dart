@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
 import 'package:quote_app/screens/quote_screen.dart';
+import 'package:quote_app/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +22,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const QuoteScreen(),
+      title: 'Quote App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const SplashScreen(), // Set SplashScreen as the initial screen
     );
   }
 }
