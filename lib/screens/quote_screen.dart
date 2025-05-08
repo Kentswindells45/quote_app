@@ -85,7 +85,19 @@ class _QuoteScreenState extends State<QuoteScreen> {
       return;
     }
 
-    final url = 'https://zenquotes.io/api/random?category=$_selectedCategory';
+    // Map categories to API-specific keywords
+    final Map<String, String> categoryKeywords = {
+      "Inspiration": "inspire",
+      "Love": "love",
+      "Life": "life",
+      "Motivation": "motivation",
+      "Happiness": "happiness",
+      "Wisdom": "wisdom",
+    };
+
+    final selectedKeyword = categoryKeywords[_selectedCategory] ?? "inspire";
+    final url = 'https://zenquotes.io/api/random?category=$selectedKeyword';
+
     setState(() {
       _isLoading = true;
     });
@@ -308,77 +320,58 @@ class _QuoteScreenState extends State<QuoteScreen> {
                       ],
                     ),
                   const SizedBox(height: 20),
+                  // Category Dropdown
                   Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildButton(
-                        label: 'Fetch Quote',
-                        icon: Icons.refresh,
-                        gradient: const LinearGradient(
-                          colors: [Colors.blue, Colors.purple],
+                      const Text(
+                        "Select a Category:",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
-                        onTap: () {
-                          if (_isHapticFeedbackEnabled) {
-                            HapticFeedback.lightImpact();
-                          }
-                          fetchQuote();
-                        },
                       ),
                       const SizedBox(height: 10),
-                      _buildButton(
-                        label: 'Save as Image',
-                        icon: Icons.save,
-                        gradient: const LinearGradient(
-                          colors: [Colors.green, Colors.teal],
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
-                        onTap: saveQuoteAsImage,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildButton(
-                        label: 'Add to Favorites',
-                        icon: Icons.favorite,
-                        gradient: const LinearGradient(
-                          colors: [Colors.red, Colors.orange],
+                        child: DropdownButton<String>(
+                          value: _selectedCategory,
+                          dropdownColor: Colors.blue.shade700,
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.white,
+                          ),
+                          underline: const SizedBox(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          isExpanded: true,
+                          items:
+                              _categories.map((String category) {
+                                return DropdownMenuItem<String>(
+                                  value: category,
+                                  child: Text(
+                                    category,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedCategory = newValue!;
+                            });
+                          },
                         ),
-                        onTap: () async {
-                          if (_quote != "Click the button to fetch a quote!") {
-                            await FavoritesManager.addFavorite(_quote, _author);
-                            _showSnackBar('Quote added to favorites!');
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _buildButton(
-                        label: 'View Favorites',
-                        icon: Icons.list,
-                        gradient: const LinearGradient(
-                          colors: [Colors.indigo, Colors.cyan],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const FavoritesScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _buildButton(
-                        label: 'View Offline Quotes',
-                        icon: Icons.history,
-                        gradient: const LinearGradient(
-                          colors: [Colors.amber, Colors.orange],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CachedQuotesScreen(),
-                            ),
-                          );
-                        },
                       ),
                     ],
                   ),
@@ -388,47 +381,128 @@ class _QuoteScreenState extends State<QuoteScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  // Helper method to build buttons
-  Widget _buildButton({
-    required String label,
-    required IconData icon,
-    required Gradient gradient,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        splashColor: Colors.white.withOpacity(0.3),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: gradient,
-          ),
-          child: Center(
-            child: Row(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 20.0,
+        ), // Raise the buttons slightly
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Fetch Quote Button
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                FloatingActionButton(
+                  heroTag: "fetchQuote",
+                  onPressed: () {
+                    if (_isHapticFeedbackEnabled) {
+                      HapticFeedback.lightImpact();
+                    }
+                    fetchQuote();
+                  },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.refresh),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Fetch Quote",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ],
             ),
-          ),
+
+            // Save as Image Button
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: "saveImage",
+                  onPressed: saveQuoteAsImage,
+                  backgroundColor: Colors.green,
+                  child: const Icon(Icons.save),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Save Image",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+
+            // Add to Favorites Button
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: "addToFavorites",
+                  onPressed: () async {
+                    if (_quote != "Click the button to fetch a quote!") {
+                      await FavoritesManager.addFavorite(_quote, _author);
+                      _showSnackBar('Quote added to favorites!');
+                    }
+                  },
+                  backgroundColor: Colors.red,
+                  child: const Icon(Icons.favorite),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Add Favorite",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+
+            // View Favorites Button
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: "viewFavorites",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FavoritesScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.orange,
+                  child: const Icon(Icons.list),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "View Favorites",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+
+            // View Offline Quotes Button
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: "viewOfflineQuotes",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CachedQuotesScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: Colors.purple,
+                  child: const Icon(Icons.history),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Offline Quotes",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
