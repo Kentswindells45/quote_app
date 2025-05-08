@@ -3,6 +3,7 @@
 import 'dart:io'; // For file operations
 import 'dart:math'; // For generating random numbers
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:quote_app/screens/cached_quotes_screen.dart';
 import 'dart:convert';
@@ -27,6 +28,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
   String _quote = "Click the button to fetch a quote!";
   String _author = "";
   bool _isLoading = false;
+  bool _isHapticFeedbackEnabled = true; // Default to enabled
 
   // List of categories
   final List<String> _categories = [
@@ -231,6 +233,54 @@ class _QuoteScreenState extends State<QuoteScreen> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue, Colors.purple],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.vibration),
+              title: const Text('Enable Haptic Feedback'),
+              trailing: Switch(
+                value: _isHapticFeedbackEnabled,
+                onChanged: (bool value) {
+                  setState(() {
+                    _isHapticFeedbackEnabled = value;
+                  });
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('About App'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AboutScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       body: AnimatedContainer(
         duration: const Duration(seconds: 1),
         color: _currentBackgroundColor,
@@ -284,72 +334,8 @@ class _QuoteScreenState extends State<QuoteScreen> {
                   const SizedBox(height: 20),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .stretch, // Stretch buttons to fill width
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Category Dropdown
-                      Column(
-                        children: [
-                          const Text(
-                            "Select a Category:",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(
-                                0.1,
-                              ), // Semi-transparent background
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: DropdownButton<String>(
-                              value: _selectedCategory,
-                              dropdownColor: Colors.blue.shade700,
-                              icon: const Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.white,
-                              ),
-                              underline:
-                                  const SizedBox(), // Remove default underline
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                              isExpanded:
-                                  true, // Make the dropdown take full width
-                              items:
-                                  _categories.map((String category) {
-                                    return DropdownMenuItem<String>(
-                                      value: category,
-                                      child: Text(
-                                        category,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _selectedCategory = newValue!;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
                       // Fetch Quote Button
                       Card(
                         elevation: 6,
@@ -358,7 +344,12 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         ),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
-                          onTap: fetchQuote,
+                          onTap: () {
+                            if (_isHapticFeedbackEnabled) {
+                              HapticFeedback.lightImpact(); // Trigger haptic feedback
+                            }
+                            fetchQuote();
+                          },
                           splashColor: Colors.purple.withOpacity(0.3),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
@@ -384,7 +375,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10), // Add spacing between buttons
+                      const SizedBox(height: 10),
                       // Save as Image Button
                       Card(
                         elevation: 6,
@@ -394,9 +385,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: saveQuoteAsImage,
-                          splashColor: Colors.teal.withOpacity(
-                            0.3,
-                          ), // Ripple effect
+                          splashColor: Colors.teal.withOpacity(0.3),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -428,7 +417,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10), // Add spacing between buttons
+                      const SizedBox(height: 10),
                       // Add to Favorites Button
                       Card(
                         elevation: 6,
@@ -451,9 +440,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                               );
                             }
                           },
-                          splashColor: Colors.orange.withOpacity(
-                            0.3,
-                          ), // Ripple effect
+                          splashColor: Colors.orange.withOpacity(0.3),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -485,7 +472,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10), // Add spacing between buttons
+                      const SizedBox(height: 10),
                       // View Favorites Button
                       Card(
                         elevation: 6,
@@ -502,9 +489,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                               ),
                             );
                           },
-                          splashColor: Colors.cyan.withOpacity(
-                            0.3,
-                          ), // Ripple effect
+                          splashColor: Colors.cyan.withOpacity(0.3),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -536,7 +521,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10), // Add spacing between buttons
+                      const SizedBox(height: 10),
                       // View Cached Quotes Button
                       Card(
                         elevation: 6,
@@ -573,7 +558,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                                   Icon(Icons.history, color: Colors.white),
                                   SizedBox(width: 8),
                                   Text(
-                                    'View offline Quotes',
+                                    'View Offline Quotes',
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
