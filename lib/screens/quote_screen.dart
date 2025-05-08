@@ -214,24 +214,6 @@ class _QuoteScreenState extends State<QuoteScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed:
-                _quote != "Click the button to fetch a quote!"
-                    ? shareQuote
-                    : null,
-          ),
-          IconButton(
-            icon: const Icon(Icons.info),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              );
-            },
-          ),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -267,6 +249,15 @@ class _QuoteScreenState extends State<QuoteScreen> {
                   });
                 },
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Share Quote'),
+              onTap: () {
+                if (_quote != "Click the button to fetch a quote!") {
+                  shareQuote();
+                }
+              },
             ),
             ListTile(
               leading: const Icon(Icons.info),
