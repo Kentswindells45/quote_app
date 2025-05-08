@@ -20,40 +20,55 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     _loadFavorites();
   }
 
+  // Load favorites from the FavoritesManager
   Future<void> _loadFavorites() async {
-    final favorites = await FavoritesManager.getFavorites();
-    setState(() {
-      _favorites = favorites;
-      _filteredFavorites = favorites;
-    });
+    try {
+      final favorites = await FavoritesManager.getFavorites();
+      setState(() {
+        _favorites = favorites;
+        _filteredFavorites = favorites;
+      });
+    } catch (e) {
+      _showSnackBar('Failed to load favorites: $e');
+    }
   }
 
+  // Clear all favorites
   Future<void> _clearFavorites() async {
-    await FavoritesManager.clearFavorites();
-    setState(() {
-      _favorites = [];
-      _filteredFavorites = [];
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('All favorites cleared!')));
+    try {
+      await FavoritesManager.clearFavorites();
+      setState(() {
+        _favorites = [];
+        _filteredFavorites = [];
+      });
+      _showSnackBar('All favorites cleared!');
+    } catch (e) {
+      _showSnackBar('Failed to clear favorites: $e');
+    }
   }
 
+  // Export favorites to a file
   Future<void> _exportFavorites() async {
-    final filePath = await FavoritesManager.exportFavorites();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Favorites exported to $filePath')));
+    try {
+      final filePath = await FavoritesManager.exportFavorites();
+      _showSnackBar('Favorites exported to $filePath');
+    } catch (e) {
+      _showSnackBar('Failed to export favorites: $e');
+    }
   }
 
+  // Import favorites from a file
   Future<void> _importFavorites() async {
-    await FavoritesManager.importFavorites();
-    await _loadFavorites();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Favorites imported successfully!')),
-    );
+    try {
+      await FavoritesManager.importFavorites();
+      await _loadFavorites();
+      _showSnackBar('Favorites imported successfully!');
+    } catch (e) {
+      _showSnackBar('Failed to import favorites: $e');
+    }
   }
 
+  // Search favorites by query
   void _searchFavorites(String query) {
     setState(() {
       _filteredFavorites =
@@ -67,6 +82,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               )
               .toList();
     });
+  }
+
+  // Show a SnackBar with a message
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -105,7 +127,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           Expanded(
             child:
                 _filteredFavorites.isEmpty
-                    ? const Center(child: Text('No favorites found.'))
+                    ? const Center(
+                      child: Text(
+                        'No favorites found.',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )
                     : ListView.builder(
                       itemCount: _filteredFavorites.length,
                       itemBuilder: (context, index) {
@@ -121,15 +148,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             trailing: IconButton(
                               icon: const Icon(Icons.delete),
                               onPressed: () async {
-                                await FavoritesManager.removeFavorite(
-                                  favorite['quote']!,
-                                );
-                                await _loadFavorites();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Favorite removed!'),
-                                  ),
-                                );
+                                await _removeFavorite(favorite['quote']!);
                               },
                             ),
                           ),
@@ -140,5 +159,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ],
       ),
     );
+  }
+
+  // Remove a single favorite
+  Future<void> _removeFavorite(String quote) async {
+    try {
+      await FavoritesManager.removeFavorite(quote);
+      await _loadFavorites();
+      _showSnackBar('Favorite removed!');
+    } catch (e) {
+      _showSnackBar('Failed to remove favorite: $e');
+    }
   }
 }

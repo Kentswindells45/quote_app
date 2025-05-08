@@ -12,8 +12,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Initialize the animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 7), // Animation duration
+      duration: const Duration(seconds: 3), // Reduced duration for better UX
     );
 
     // Define a fade-in animation
@@ -31,13 +31,20 @@ class _SplashScreenState extends State<SplashScreen>
     // Start the animation
     _controller.forward();
 
-    // Navigate to the QuoteScreen after 3 seconds
-    Future.delayed(const Duration(seconds: 7), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const QuoteScreen()),
-      );
+    // Navigate to the QuoteScreen after the animation completes
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _navigateToQuoteScreen();
+      }
     });
+  }
+
+  // Navigate to the QuoteScreen
+  void _navigateToQuoteScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const QuoteScreen()),
+    );
   }
 
   @override

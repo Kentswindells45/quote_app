@@ -62,8 +62,11 @@ class _QuoteScreenState extends State<QuoteScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCachedQuote();
+  }
 
-    // Load cached quotes
+  // Load the last cached quote from Hive
+  void _loadCachedQuote() {
     final box = Hive.box('quotes');
     final cachedQuotes = box.get('cachedQuotes', defaultValue: []);
     if (cachedQuotes.isNotEmpty) {
@@ -74,19 +77,14 @@ class _QuoteScreenState extends State<QuoteScreen> {
     }
   }
 
+  // Fetch a new quote from the API
   Future<void> fetchQuote() async {
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      // No internet connection
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No internet connection. Showing cached quotes.'),
-        ),
-      );
+      _showSnackBar('No internet connection. Showing cached quotes.');
       return;
     }
 
-    // Fetch quote from API
     final url = 'https://zenquotes.io/api/random?category=$_selectedCategory';
     setState(() {
       _isLoading = true;
@@ -113,22 +111,13 @@ class _QuoteScreenState extends State<QuoteScreen> {
           cachedQuotes.add({'quote': _quote, 'author': _author});
           box.put('cachedQuotes', cachedQuotes);
         } else {
-          setState(() {
-            _quote = "Unexpected response format.";
-            _author = "";
-          });
+          _showSnackBar('Unexpected response format.');
         }
       } else {
-        setState(() {
-          _quote = "Failed to fetch quote. Please try again.";
-          _author = "";
-        });
+        _showSnackBar('Failed to fetch quote. Please try again.');
       }
     } catch (e) {
-      setState(() {
-        _quote = "An error occurred. Please check your connection.";
-        _author = "";
-      });
+      _showSnackBar('An error occurred. Please check your connection.');
     } finally {
       setState(() {
         _isLoading = false;
@@ -136,59 +125,55 @@ class _QuoteScreenState extends State<QuoteScreen> {
     }
   }
 
+  // Save the current quote as an image
   Future<void> saveQuoteAsImage() async {
     try {
-      // Capture the widget as an image
       final image = await _screenshotController.capture();
       if (image == null) return;
 
-      // Get the directory to save the image
       final directory = await getApplicationDocumentsDirectory();
       final imagePath =
           '${directory.path}/quote_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      // Save the image to the directory
       final file = File(imagePath);
       await file.writeAsBytes(image);
 
-      // Show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quote saved as image: $imagePath')),
-      );
+      _showSnackBar('Quote saved as image: $imagePath');
     } catch (e) {
-      // Show an error message
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save image: $e')));
+      _showSnackBar('Failed to save image: $e');
     }
   }
 
+  // Share the current quote as text
   void shareQuote() {
     final text = '$_quote\n- $_author';
     Share.share(text);
   }
 
+  // Share the current quote as an image
   Future<void> shareQuoteAsImage() async {
     try {
-      // Capture the widget as an image
       final image = await _screenshotController.capture();
       if (image == null) return;
 
-      // Save the image to a temporary directory
       final directory = await getTemporaryDirectory();
       final imagePath = '${directory.path}/quote_image.png';
       final file = File(imagePath);
       await file.writeAsBytes(image);
 
-      // Share the image
       await Share.shareXFiles([
         XFile(imagePath),
       ], text: 'Check out this quote!');
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to share quote: $e')));
+      _showSnackBar('Failed to share quote: $e');
     }
+  }
+
+  // Show a snackbar with a message
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -327,245 +312,121 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Fetch Quote Button
-                      Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      _buildButton(
+                        label: 'Fetch Quote',
+                        icon: Icons.refresh,
+                        gradient: const LinearGradient(
+                          colors: [Colors.blue, Colors.purple],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            if (_isHapticFeedbackEnabled) {
-                              HapticFeedback.lightImpact(); // Trigger haptic feedback
-                            }
-                            fetchQuote();
-                          },
-                          splashColor: Colors.purple.withOpacity(0.3),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Colors.blue, Colors.purple],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'Fetch Quote',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        onTap: () {
+                          if (_isHapticFeedbackEnabled) {
+                            HapticFeedback.lightImpact();
+                          }
+                          fetchQuote();
+                        },
                       ),
                       const SizedBox(height: 10),
-                      // Save as Image Button
-                      Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      _buildButton(
+                        label: 'Save as Image',
+                        icon: Icons.save,
+                        gradient: const LinearGradient(
+                          colors: [Colors.green, Colors.teal],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: saveQuoteAsImage,
-                          splashColor: Colors.teal.withOpacity(0.3),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Colors.green, Colors.teal],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            child: const Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.save, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Save as Image',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        onTap: saveQuoteAsImage,
                       ),
                       const SizedBox(height: 10),
-                      // Add to Favorites Button
-                      Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      _buildButton(
+                        label: 'Add to Favorites',
+                        icon: Icons.favorite,
+                        gradient: const LinearGradient(
+                          colors: [Colors.red, Colors.orange],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () async {
-                            if (_quote !=
-                                "Click the button to fetch a quote!") {
-                              await FavoritesManager.addFavorite(
-                                _quote,
-                                _author,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Quote added to favorites!'),
-                                ),
-                              );
-                            }
-                          },
-                          splashColor: Colors.orange.withOpacity(0.3),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Colors.red, Colors.orange],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            child: const Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.favorite, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Add to Favorites',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        onTap: () async {
+                          if (_quote != "Click the button to fetch a quote!") {
+                            await FavoritesManager.addFavorite(_quote, _author);
+                            _showSnackBar('Quote added to favorites!');
+                          }
+                        },
                       ),
                       const SizedBox(height: 10),
-                      // View Favorites Button
-                      Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      _buildButton(
+                        label: 'View Favorites',
+                        icon: Icons.list,
+                        gradient: const LinearGradient(
+                          colors: [Colors.indigo, Colors.cyan],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const FavoritesScreen(),
-                              ),
-                            );
-                          },
-                          splashColor: Colors.cyan.withOpacity(0.3),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Colors.indigo, Colors.cyan],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const FavoritesScreen(),
                             ),
-                            child: const Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.list, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'View Favorites',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 10),
-                      // View Cached Quotes Button
-                      Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      _buildButton(
+                        label: 'View Offline Quotes',
+                        icon: Icons.history,
+                        gradient: const LinearGradient(
+                          colors: [Colors.amber, Colors.orange],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const CachedQuotesScreen(),
-                              ),
-                            );
-                          },
-                          splashColor: Colors.amber.withOpacity(0.3),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: const LinearGradient(
-                                colors: [Colors.amber, Colors.orange],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CachedQuotesScreen(),
                             ),
-                            child: const Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.history, color: Colors.white),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'View Offline Quotes',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     ],
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build buttons
+  Widget _buildButton({
+    required String label,
+    required IconData icon,
+    required Gradient gradient,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        splashColor: Colors.white.withOpacity(0.3),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: gradient,
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
