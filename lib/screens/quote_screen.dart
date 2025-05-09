@@ -384,8 +384,8 @@ class _QuoteScreenState extends State<QuoteScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(
-          bottom: 20.0,
-        ), // Raise the buttons slightly
+          bottom: 30.0,
+        ), // Adjust the bottom padding to raise the buttons
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
