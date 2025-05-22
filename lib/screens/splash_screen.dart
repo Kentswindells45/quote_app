@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:quote_app/screens/quote_screen.dart';
+import 'package:lottie/lottie.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,19 +21,14 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Initialize the animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Reduced duration for better UX
+      duration: const Duration(seconds: 3),
     );
 
-    // Define a fade-in animation
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
-
-    // Start the animation
     _controller.forward();
 
-    // Navigate to the QuoteScreen after the animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _navigateToQuoteScreen();
@@ -39,7 +36,6 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-  // Navigate to the QuoteScreen
   void _navigateToQuoteScreen() {
     Navigator.pushReplacement(
       context,
@@ -69,16 +65,51 @@ class _SplashScreenState extends State<SplashScreen>
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.format_quote, size: 100, color: Colors.white),
-                SizedBox(height: 20),
-                Text(
-                  'Quote App',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              children: [
+                // Lottie animation (optional)
+                SizedBox(
+                  height: 120,
+                  child: Lottie.asset('lib/assets/Lottie Lego.json'),
+                ),
+                const SizedBox(height: 30),
+                // Glassmorphism card for app name
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 18,
+                        horizontal: 36,
+                      ),
+                      color: Colors.white.withOpacity(0.2),
+                      child: const Text(
+                        'Quote App',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.2,
+                          fontFamily: 'Georgia',
+                        ),
+                      ),
+                    ),
                   ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Inspire your day!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Subtle loading indicator
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2.5,
                 ),
               ],
             ),

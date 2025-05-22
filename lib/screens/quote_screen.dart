@@ -16,6 +16,7 @@ import 'package:quote_app/screens/favorites_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:quote_app/screens/about_screen.dart';
+import 'package:lottie/lottie.dart'; // Import Lottie package
 
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key});
@@ -192,6 +193,8 @@ class _QuoteScreenState extends State<QuoteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 8,
+        shadowColor: Colors.deepPurple.withOpacity(0.4),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -210,7 +213,6 @@ class _QuoteScreenState extends State<QuoteScreen> {
           ),
         ),
         centerTitle: true,
-        elevation: 0,
       ),
       drawer: Drawer(
         child: ListView(
@@ -270,8 +272,17 @@ class _QuoteScreenState extends State<QuoteScreen> {
         ),
       ),
       body: AnimatedContainer(
-        duration: const Duration(seconds: 1),
-        color: _currentBackgroundColor,
+        duration: const Duration(milliseconds: 800),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              _currentBackgroundColor,
+              _currentBackgroundColor.withOpacity(0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Center(
           child: Screenshot(
             controller: _screenshotController,
@@ -281,43 +292,77 @@ class _QuoteScreenState extends State<QuoteScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (_isLoading)
-                    const CircularProgressIndicator()
+                    SizedBox(
+                      height: 100,
+                      child: Lottie.asset(
+                        'lib/assets/Lottie Lego.json',
+                      ), // Add a Lottie file to your assets
+                    )
                   else
-                    Column(
-                      children: [
-                        Text(
-                          _quote,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 10.0,
-                                color: Colors.black,
-                                offset: Offset(2.0, 2.0),
-                              ),
-                            ],
-                          ),
+                    Card(
+                      color: Colors.white.withOpacity(0.85),
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 32,
+                          horizontal: 24,
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          _author.isNotEmpty ? '- $_author' : '',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 10.0,
-                                color: Colors.black,
-                                offset: Offset(2.0, 2.0),
+                        child: Column(
+                          children: [
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 500),
+                              transitionBuilder: (
+                                Widget child,
+                                Animation<double> animation,
+                              ) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                              child: Text(
+                                _quote,
+                                key: ValueKey(_quote),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.black87,
+                                  fontFamily: 'Georgia',
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 16),
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 500),
+                              transitionBuilder: (
+                                Widget child,
+                                Animation<double> animation,
+                              ) {
+                                return SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.5),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                );
+                              },
+                              child: Text(
+                                _author.isNotEmpty ? '- $_author' : '',
+                                key: ValueKey(_author),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   const SizedBox(height: 20),
                   // Category Dropdown
@@ -336,13 +381,20 @@ class _QuoteScreenState extends State<QuoteScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.white, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: DropdownButton<String>(
                           value: _selectedCategory,
-                          dropdownColor: Colors.blue.shade700,
+                          dropdownColor: Colors.deepPurple.shade200,
                           icon: const Icon(
                             Icons.arrow_drop_down,
                             color: Colors.white,
@@ -360,7 +412,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                                   child: Text(
                                     category,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.deepPurple,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -395,6 +447,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               children: [
                 FloatingActionButton(
                   heroTag: "fetchQuote",
+                  tooltip: "Fetch a new quote",
                   onPressed: () {
                     if (_isHapticFeedbackEnabled) {
                       HapticFeedback.lightImpact();
